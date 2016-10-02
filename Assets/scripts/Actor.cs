@@ -3,16 +3,14 @@ using System.Collections;
 
 public class Actor : MonoBehaviour
 {
-    public float moveSpeed,verticalSpeed,MaxHP;
+    public float moveSpeed,verticalSpeed,MaxHP,impactDamage;
     public Rigidbody2D rigBod;
     float HP;
     public SpriteRenderer[] sr;
     public Color[] standardCol;
     public Animator anim;
     Vector3 _movement;
-
-    public float footstepAmp;
-
+    
     public virtual void Start()
     {
         HP = MaxHP;
@@ -65,14 +63,13 @@ public class Actor : MonoBehaviour
         int i = 0;
         foreach (SpriteRenderer s in sr)
         {
-            s.color = Color.red;
+            s.enabled = true;
         }
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForEndOfFrame();
 
         foreach (SpriteRenderer s in sr)
         {
-            s.color = standardCol[i];
-            i++;
+            s.enabled = false;
         }
     }
 
@@ -88,13 +85,5 @@ public class Actor : MonoBehaviour
             anim.SetBool("walking", (rigBod.velocity.magnitude / 10) > 0.1f ? true : false);
             anim.SetFloat("speed", 1  +rigBod.velocity.magnitude/10);
         }
-    }
-
-    [SerializeField]
-    AudioClip[] footstepSounds;
-
-    public void Footstep()
-    {
-        SoundManager.instance.playSound(footstepSounds[Random.Range(0, footstepSounds.Length)],0.25f*footstepAmp);
     }
 }

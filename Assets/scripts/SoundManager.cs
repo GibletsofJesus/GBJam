@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 public class SoundManager : MonoBehaviour
 {
-
     public static SoundManager instance;
     public int numberOfSources;
     public float volumeMultiplayer = 1,musicVolume=1;
@@ -22,6 +21,7 @@ public class SoundManager : MonoBehaviour
 
     void Awake()
     {
+        managedAudioSources[0].AudioSrc.Pause();
         for (int i = 0; i < numberOfSources; i++)
         {
             audioSrcs.Add(gameObject.AddComponent<AudioSource>());
@@ -38,6 +38,16 @@ public class SoundManager : MonoBehaviour
                 a.Stop();
             }
         }
+    }
+
+    public void ChangeMoveSound(bool PausePlay,float pitch)
+    {
+        if (PausePlay)//True for play/resume, false for pause
+            managedAudioSources[0].AudioSrc.UnPause();
+        else
+            managedAudioSources[0].AudioSrc.Pause();
+
+        managedAudioSources[0].AudioSrc.pitch = pitch;
     }
 
     public void changeVolume(float newVol)

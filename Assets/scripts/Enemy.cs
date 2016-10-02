@@ -5,22 +5,42 @@ public class Enemy : Actor, IPoolable<Enemy>
 {
     public static int total;
     public PoolData<Enemy> poolData { get; set; }
-
-    [SerializeField]
-    GameObject corpse;
+    public float width;
+    
     [SerializeField]
     AudioClip[] deathSound;
+    float killPoint;
+    [SerializeField]
+    float decellerationAmount,accellerationAmount;
+
+    void Awake()
+    {
+        killPoint = Camera.main.ScreenToWorldPoint(new Vector3(-0.5f, 0, 0)).x;
+    }
 
     void Update()
     {
         Movement();
+
+        if (transform.position.x < killPoint)
+            ReturnPool();
+    }
+
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.tag == "Player")
+        {
+            frameHolder.instance.holdFrame(0.1f);
+            //mb make the player flash
+            Player.instance.StartCoroutine(Player.instance.TakeDamage(impactDamage,decellerationAmount));
+            StartCoroutine(TakeDamage(impactDamage));
+        }
     }
 
     public void OnPooled(Vector3 startPos)
     {
         total++;
         //set everything up
-        rigBod.velocity = Vector2.zero;
         transform.position = startPos;
 
         base.Start();
@@ -37,12 +57,15 @@ public class Enemy : Actor, IPoolable<Enemy>
     public override void Death()
     {
         total--;
-        SoundManager.instance.playSound(deathSound[Random.Range(0,deathSound.Length)],1,Random.Range(0.9f,1.1f));
-        BloodParticles.instance.Blood(transform.position, Random.Range(16, 22));
-        Instantiate(corpse, transform.position + Vector3.down * 0.4375f, transform.rotation);
+        if (deathSound.Length>0)
+            SoundManager.instance.playSound(deathSound[Random.Range(0, deathSound.Length)], 1, Random.Range(0.9f, 1.1f));
         frameHolder.instance.holdFrame(0.1f);
         ReturnPool();
+        Player.instance.IncreaseSpeed(accellerationAmount);
         base.Death();
+        HuDManager.instance.kills++;
+        HuDManager.instance.killText.text = HuDManager.instance.kills+"";
+        ExplosionManager.instance.PoolExplosion(transform.position, Vector3.one * 0.25f);
     }
 
     public void ReturnPool()
@@ -54,31 +77,10 @@ public class Enemy : Actor, IPoolable<Enemy>
     public override void Movement()
     {
         base.Movement();
-
-        Vector3 target = Player.instance.transform.position;
-
-        if (target.x > transform.position.x)
-        {
-            if (rigBod.velocity.x < moveSpeed)
-            rigBod.AddForce(Vector2.right * 5);
-        }
-        if (target.x < transform.position.x)
-        {
-            if (rigBod.velocity.x > -moveSpeed)
-                rigBod.AddForce(Vector2.left * 5);
-        }
-
-            transform.localScale = new Vector3(target.x > transform.position.x ? 1 : -1, 1, 1);
-        if (target.y > transform.position.y)
-        {
-            if (rigBod.velocity.y < moveSpeed)
-                rigBod.AddForce(Vector2.up * 5);
-        }
-        if (target.y < transform.position.y)
-        {
-            if (rigBod.velocity.y > -moveSpeed)
-                rigBod.AddForce(Vector2.down * 5);
-        }
+        if (GameStateManager.instance.currentState==GameStateManager.GameState.Gameplay)
+        Move(-Time.deltaTime * ((Player.instance.moveSpeed *50)+ moveSpeed), 0);
+        else if (GameStateManager.instance.currentState == GameStateManager.GameState.finishLine)
+            Move(-Time.deltaTime *moveSpeed, 0);
 
     }
 }

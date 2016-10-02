@@ -8,6 +8,7 @@ public class GameStateManager : MonoBehaviour {
     public enum GameState
     {
         Gameplay,
+        finishLine,
         Paused,
     }
 

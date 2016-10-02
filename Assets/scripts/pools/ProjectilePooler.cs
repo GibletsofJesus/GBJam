@@ -25,10 +25,10 @@ public class ProjectilePooler : MonoBehaviour
         }
     }
 
-    public Projectile PoolProj(Projectile.ProjData data, Vector3 eulerRotation,Vector3 startPos)
+    public Projectile PoolProj(Projectile.ProjData data,Vector3 startPos)
     {
         Projectile newProj = objectPool.GetPooledObject(transform);
-        newProj.OnPooled(data, eulerRotation,startPos);
+        newProj.OnPooled(data, startPos);
         allProjectiles.Add(newProj);
         return newProj;
     }

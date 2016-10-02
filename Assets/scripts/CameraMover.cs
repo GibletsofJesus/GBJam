@@ -2,11 +2,39 @@
 using System.Collections;
 
 public class CameraMover : MonoBehaviour {
-    	
-	void Update ()
+
+    public static CameraMover instance;
+    Vector3 lowerLimit;
+    public Vector3 standardPosition;
+
+    void Start()
     {
-        Vector3 newPos =  -(Player.instance.transform.position - Camera.main.ScreenToWorldPoint(Input.mousePosition))/3;
-        newPos = Player.instance.transform.position + (newPos / 1.5f);
-        transform.position = new Vector3(newPos.x, newPos.y, -10);
+        instance = this;
+        lowerLimit = transform.position;
+    }
+
+    void Update()
+    {
+        //If player is on ground, stay still,
+        //If player moves above the top 75% of the screen, move the camera up
+
+        while (Player.instance.transform.position.y > Camera.main.ViewportToWorldPoint(new Vector3(0, .75f, 0)).y)
+        {
+            //Move camera up
+            //Do it until the if statement is resolved
+            transform.position += Vector3.up;
+        }
+
+        while (Player.instance.transform.position.y < Camera.main.ViewportToWorldPoint(new Vector3(0, .125f, 0)).y)
+        {
+            //move cam down
+            transform.position += Vector3.down;
+
+        }
+        if (transform.position.y < 0)
+            transform.position = lowerLimit;
+
+        standardPosition = transform.position;
+
     }
 }

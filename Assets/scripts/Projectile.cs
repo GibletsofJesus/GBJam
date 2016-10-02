@@ -5,7 +5,7 @@ public class Projectile : MonoBehaviour, IPoolable<Projectile>
 {
     public PoolData<Projectile> poolData { get; set; }
     public float maxLifetime;
-    float currentLifeTime;
+    float currentLifeTime,killPoint,nerfPoint;
 
     [System.Serializable]
     public class ProjData
@@ -17,13 +17,15 @@ public class Projectile : MonoBehaviour, IPoolable<Projectile>
 
     void Awake()
     {
-
+        killPoint = Camera.main.ViewportToWorldPoint(new Vector3(1.5f, 0, 0)).x;
+        nerfPoint = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, 0)).x;
     }
 
     void Update()
     {
         transform.Translate(Vector3.right * ProjectileData.speed);
-
+        if (transform.position.x > killPoint)
+            ReturnPool();
         currentLifeTime += Time.deltaTime;
         if (currentLifeTime > maxLifetime)
             ReturnPool();
@@ -32,22 +34,23 @@ public class Projectile : MonoBehaviour, IPoolable<Projectile>
 
     void OnTriggerEnter2D(Collider2D col)
     {
-        if (col.tag != "Player" && col.tag != "bullet")
+        if (transform.position.x < nerfPoint)
         {
-            if (col.GetComponent<Actor>())
+            if (col.tag != "Player" && col.tag != "bullet")
             {
-                BloodParticles.instance.Blood(transform.position, Random.Range(2, 4));
-                col.GetComponent<Actor>().StartCoroutine(col.GetComponent<Actor>().TakeDamage(ProjectileData.damage));
+                if (col.GetComponent<Actor>())
+                {
+                    col.GetComponent<Actor>().StartCoroutine(col.GetComponent<Actor>().TakeDamage(ProjectileData.damage));
+                }
+                ReturnPool();
             }
-            ReturnPool();
         }
     }
 
-    public void OnPooled(ProjData data, Vector3 eulerRotation,Vector3 startPos)
+    public void OnPooled(ProjData data,Vector3 startPos)
     {
         //set everything up
         transform.position = startPos;
-        transform.rotation = Quaternion.Euler(eulerRotation);
         ProjectileData = data;
         gameObject.SetActive(true);
     }
