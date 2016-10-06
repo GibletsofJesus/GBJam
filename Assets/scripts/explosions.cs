@@ -13,21 +13,21 @@ public class explosions : MonoBehaviour, IPoolable<explosions>
 	void Start () {
 	
 	}
-	
-	// Update is called once per frame
-	void Update () {
 
+    // Update is called once per frame
+    void Update()
+    {
+        transform.position -= Vector3.right * Player.instance.moveSpeed;
     }
 
     public IEnumerator Explode()
     {
-        yield return new WaitForEndOfFrame();
         sr.color = A;
-        yield return new WaitForEndOfFrame();
+        yield return new WaitForSeconds(0.05f);
 
         yield return new WaitForEndOfFrame();
         sr.color = B;
-        yield return new WaitForEndOfFrame();
+        yield return new WaitForSeconds(0.1f);
         ReturnPool();
     }
 

@@ -24,4 +24,22 @@ public class GameStateManager : MonoBehaviour {
         previousState = currentState;
         currentState = newSate;
     }
+
+    public void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (currentState == GameState.Paused)
+            {
+                PauseMenu.instance.gameObject.SetActive(false);
+                currentState = previousState;
+            }
+            else
+            {
+                PauseMenu.instance.OpenPauseMenu();
+                previousState = currentState;
+                currentState = GameState.Paused;
+            }
+        }
+    }
 }

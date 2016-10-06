@@ -8,6 +8,7 @@ public class SoundManager : MonoBehaviour
     public int numberOfSources;
     public float volumeMultiplayer = 1,musicVolume=1;
     public AudioSource music;
+    bool SlowMo;
 
     public List<managedSource> managedAudioSources = new List<managedSource>();
     List<AudioSource> audioSrcs = new List<AudioSource>();
@@ -19,9 +20,24 @@ public class SoundManager : MonoBehaviour
         public float volumeLimit;
     }
 
+    public void EnableSlowMotionAudio(bool onOff)
+    {
+        SlowMo = onOff;
+        foreach (managedSource ms in managedAudioSources)
+        {
+            ms.AudioSrc.pitch *= SlowMo ? 0.1f : 10;
+        }
+        foreach (AudioSource a in audioSrcs)
+        {
+            a.pitch *= SlowMo ? 0.1f : 10;
+        }
+    }
+
+
     void Awake()
     {
-        managedAudioSources[0].AudioSrc.Pause();
+        if (managedAudioSources.Count > 0)
+            managedAudioSources[0].AudioSrc.Pause();
         for (int i = 0; i < numberOfSources; i++)
         {
             audioSrcs.Add(gameObject.AddComponent<AudioSource>());
@@ -47,7 +63,7 @@ public class SoundManager : MonoBehaviour
         else
             managedAudioSources[0].AudioSrc.Pause();
 
-        managedAudioSources[0].AudioSrc.pitch = pitch;
+        managedAudioSources[0].AudioSrc.pitch = pitch * (SlowMo ? 0.1f : 1);
     }
 
     public void changeVolume(float newVol)
@@ -72,7 +88,7 @@ public class SoundManager : MonoBehaviour
             if (!audioSrcs[c].isPlaying)
             {
                 audioSrcs[c].clip = sound;
-                audioSrcs[c].pitch = pitch;
+                audioSrcs[c].pitch = pitch * (SlowMo ? 0.1f : 1);
                 audioSrcs[c].PlayOneShot(sound);
                 audioSrcs[c].volume = volume * volumeMultiplayer;
                 break;

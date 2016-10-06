@@ -25,10 +25,11 @@ public class ProjectilePooler : MonoBehaviour
         }
     }
 
-    public Projectile PoolProj(Projectile.ProjData data,Vector3 startPos)
+    public Projectile PoolProj(Projectile.ProjData data,Vector3 startPos, float scale)
     {
         Projectile newProj = objectPool.GetPooledObject(transform);
         newProj.OnPooled(data, startPos);
+        newProj.transform.localScale = Vector3.one * scale;
         allProjectiles.Add(newProj);
         return newProj;
     }

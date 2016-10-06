@@ -5,7 +5,8 @@ public class Actor : MonoBehaviour
 {
     public float moveSpeed,verticalSpeed,MaxHP,impactDamage;
     public Rigidbody2D rigBod;
-    float HP;
+    [HideInInspector]
+    public float HP;
     public SpriteRenderer[] sr;
     public Color[] standardCol;
     public Animator anim;
@@ -59,7 +60,9 @@ public class Actor : MonoBehaviour
     {
         HP -= damage;
         if (HP <= 0)
+        {
             Death();
+        }
         int i = 0;
         foreach (SpriteRenderer s in sr)
         {

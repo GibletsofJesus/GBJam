@@ -38,12 +38,12 @@ public class Worldscroll : MonoBehaviour
     {
         if (Player.instance.distanceCovered >= levelDistance && FinishLine.transform.position.x > 0)
         {
-            FinishLine.transform.localPosition -= new Vector3(Mathf.FloorToInt(Player.instance.moveSpeed * speedMultiplier * 2)/2, .5f, 0);
+            FinishLine.transform.localPosition -= new Vector3(Mathf.FloorToInt(Player.instance.GetSpeed()), 0, 0);
             if (FinishLine.transform.localPosition.x < 0)
                 Finish();//time to end
         }
         
-        float speed = Player.instance.moveSpeed;
+        float speed = Player.instance.GetSpeed();
 
         HuDManager.instance.UpdatePlayerCursor(Player.instance.distanceCovered / levelDistance);
 
@@ -52,7 +52,7 @@ public class Worldscroll : MonoBehaviour
             //Scroll floor
             for (int i = 0; i < floorTiles.Count; i++)
             {
-                floorTiles[i].transform.position += Vector3.left * speed;
+                floorTiles[i].transform.position += Vector3.left * speed * Time.deltaTime*speedMultiplier ;
                 if (floorTiles[i].transform.position.x < -96)
                 {
                     SpriteRenderer sr = floorTiles[i];
@@ -63,17 +63,32 @@ public class Worldscroll : MonoBehaviour
                     floorTiles.Add(sr);
                 }
             }
-            //Scroll bushes
-            foreach (ParticleSystem ps in bushes)
-            {
-                ps.transform.position = new Vector3(Mathf.Lerp(128, 256, speed / 5), 6, 0);
-                ps.emissionRate = Player.instance.moveSpeed * spawnMultiplier;
-                ps.startSpeed = Player.instance.moveSpeed * speedMultiplier;
-            }
         }
         else if (GameStateManager.instance.currentState == GameStateManager.GameState.finishLine)
         {
-            SoundManager.instance.managedAudioSources[0].AudioSrc.volume -= Time.deltaTime * (Player.instance.moveSpeed/5);
+            SoundManager.instance.managedAudioSources[0].AudioSrc.volume -= Time.deltaTime * (Player.instance.GetSpeed() / 5);
+        }
+
+
+        //Scroll bushes
+        foreach (ParticleSystem ps in bushes)
+        {
+            ps.transform.position = new Vector3(Mathf.Lerp(128, 256, speed / 5), 6, 0);
+            ps.emissionRate = Player.instance.GetSpeed() * spawnMultiplier;
+            ps.startSpeed = Player.instance.GetSpeed() * speedMultiplier;
+
+            ParticleSystem.Particle[] allParticles = new ParticleSystem.Particle[ps.particleCount];
+
+            ps.GetParticles(allParticles);
+            for (int i = 0; i < allParticles.Length; i++)
+            {
+                if (GameStateManager.instance.currentState == GameStateManager.GameState.Paused)
+                    allParticles[i].velocity = new Vector2(0, 0);
+                else
+                    allParticles[i].velocity = new Vector2(-Player.instance.GetSpeed() * speedMultiplier, 0);
+            }
+            ps.SetParticles(allParticles, ps.particleCount);
         }
     }
+
 }

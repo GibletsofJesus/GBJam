@@ -38,9 +38,9 @@ public class Projectile : MonoBehaviour, IPoolable<Projectile>
         {
             if (col.tag != "Player" && col.tag != "bullet")
             {
-                if (col.GetComponent<Actor>())
+                if (col.GetComponent<Enemy>())
                 {
-                    col.GetComponent<Actor>().StartCoroutine(col.GetComponent<Actor>().TakeDamage(ProjectileData.damage));
+                    col.GetComponent<Enemy>().StartCoroutine(col.GetComponent<Enemy>().TakeDamage(ProjectileData.damage));
                 }
                 ReturnPool();
             }

@@ -24,11 +24,15 @@ public class Player : Actor
     [SerializeField]
     ParticleSystem[] bulletCasings;
     [SerializeField]
+    GameObject heightMarker;
+    [SerializeField]
+
     ParticleSystem muzzleFlash, moveSparks;
     [SerializeField]
     AudioClip shootSound, accelerationSound;
     float shootCooldown, abilityCooldown, jumpTimer;
     float speedToAdd = 0.001f;
+    public bool SlowMotion;
 
     public override void Start()
     {
@@ -38,10 +42,12 @@ public class Player : Actor
 
     void Update()
     {
+        heightMarker.transform.position = new Vector3(0, -44+(verticalSpeed*maxJumpTime) - (gravity*maxJumpTime*maxJumpTime), 0);
+
         if (GameStateManager.instance.currentState == GameStateManager.GameState.finishLine)
         {
             if (transform.position.x < 128)
-                Move(moveSpeed * Time.deltaTime * Worldscroll.instance.speedMultiplier, 0);
+                Move(GetSpeed() * Time.deltaTime * Worldscroll.instance.speedMultiplier, 0);
         }
         else if (GameStateManager.instance.currentState == GameStateManager.GameState.Gameplay)
         {
@@ -77,11 +83,14 @@ public class Player : Actor
         }
 
         //Stop jumping
-        if (!pressingJump && wasPressingJump && transform.position.y > floorHeight)
+        if (!pressingJump && wasPressingJump && transform.position.y > floorHeight || GameStateManager.instance.currentState == GameStateManager.GameState.finishLine)
             jumping = false;
 
         if (transform.position.y == floorHeight)
-                SoundManager.instance.managedAudioSources[1].AudioSrc.volume = 0;
+        {
+            SoundManager.instance.managedAudioSources[1].AudioSrc.volume = 0f;
+            SoundManager.instance.managedAudioSources[1].AudioSrc.volume = 0;
+        }
         #endregion
     }
 
@@ -109,17 +118,33 @@ public class Player : Actor
 
     void KeyboardInput()
     {
-        wasPressingJump = pressingJump;
-        wasPressingShoot = pressingShoot; 
+        if (Input.GetButtonDown("Fire2"))
+            SlowMotion = true;
+
+        if (Input.GetButtonUp("Fire2"))
+            SlowMotion = false;
+
+        if (Input.GetKey(KeyCode.S))
+            Time.timeScale = 0.1f;
+        else
+            Time.timeScale = 1;
+
+            wasPressingJump = pressingJump;
+        wasPressingShoot = pressingShoot;
         //I want to make it clear I know there's options for GetButtonUp/Down etc.
         //I'm setting this up so mobile input works ok
-            pressingJump = Input.GetButton("Jump");
-            pressingShoot = Input.GetButton("Fire1");
+        pressingJump = Input.GetButton("Jump");
+        pressingShoot = Input.GetButton("Fire1");
     }
 
     public override void LateUpdate()
     {
         base.LateUpdate();
+    }
+
+    public float GetSpeed()
+    {
+        return moveSpeed * (SlowMotion ? 0.1f : 1f);
     }
 
     void Shooting()
@@ -128,10 +153,11 @@ public class Player : Actor
         {
             SoundManager.instance.playSound(shootSound, 1, Random.Range(0.85f, 1.15f));
             shootCooldown = fireRate;
-            moveSpeed -= decellerationPerShot;
+            Projectile proj = ProjectilePooler.instance.PoolProj(bulletStats, transform.position,moveSpeed*0.2f);
+           // moveSpeed -= decellerationPerShot;
+            moveSpeed *= 0.8f;
             if (moveSpeed < 0)
                 moveSpeed = 0.1f;
-            Projectile proj = ProjectilePooler.instance.PoolProj(bulletStats, transform.position);
 
             if (CameraShake.instance)
             {
@@ -146,14 +172,14 @@ public class Player : Actor
     {
         speedToAdd += speed;
     }
-
-    [SerializeField]
+    
     bool jumping = false;
 
     public IEnumerator TakeDamage(float damage, float Decelleration)
     {
-        Debug.Log("damaged");
         moveSpeed -= Decelleration;
+        if (moveSpeed < 0.1f)
+            moveSpeed = 0.1f;
         return base.TakeDamage(damage);
     }
 
@@ -168,7 +194,7 @@ public class Player : Actor
 #region On ground
         if (transform.position.y == floorHeight)
         {
-            SoundManager.instance.ChangeMoveSound(true, moveSpeed / 100f);
+            SoundManager.instance.ChangeMoveSound(true, GetSpeed() / 100f);
 
 #region just landed
             if (speedToAdd > 0)
@@ -188,7 +214,6 @@ public class Player : Actor
                 moveSpeed += speedToAdd;
                 speedToAdd = 0;
                 SoundManager.instance.managedAudioSources[1].AudioSrc.pitch = 0.5f;
-                SoundManager.instance.managedAudioSources[1].AudioSrc.volume = 0f;
             }
 #endregion
             moveSpeed += IdleAccelerationCurve.Evaluate(moveSpeed / IdleAccLimit)*Time.deltaTime;
@@ -203,7 +228,7 @@ public class Player : Actor
         //Start jump
         if (!jumping && pressingJump && transform.position.y == floorHeight)
         {
-            SoundManager.instance.ChangeMoveSound(false, moveSpeed / 100f);
+            SoundManager.instance.ChangeMoveSound(false, GetSpeed() / 100f);
             jumping = true;
         }
 
@@ -215,12 +240,12 @@ public class Player : Actor
                 moveSparks.enableEmission = false;
                 speedToAdd = 0.01f;
             }
-            Move(0, verticalSpeed * Time.deltaTime - (gravity * jumpTimer * Time.deltaTime));
+            Move(0, (SlowMotion ? 0.1f : 1) * verticalSpeed * Time.deltaTime - (gravity * jumpTimer * Time.deltaTime));
             jumpTimer += Time.deltaTime;
             if (jumpTimer > maxJumpTime)
                 jumping = false;
         }
-#endregion
+        #endregion
 
     }
     public float gravity, fallTimer;

@@ -11,7 +11,7 @@ public class CameraShake : MonoBehaviour
     // Amplitude of the shake. A larger value shakes the camera harder.
     public float shakeAmount = 0.7f;
     public float decreaseFactor = 1.0f;
-    
+
     void OnEnable()
     {
         instance = this;
@@ -24,17 +24,20 @@ public class CameraShake : MonoBehaviour
 
     void Update()
     {
-        if (shakeDuration > 0)
+        if (GameStateManager.instance.currentState != GameStateManager.GameState.Paused)
         {
-            Vector3 newPos = -(Player.instance.transform.position - Camera.main.ScreenToWorldPoint(Input.mousePosition)) / 3;
-            newPos = Player.instance.transform.position + (newPos / 1.5f);
-
-            Camera.main.transform.localPosition = (Vector3.up * shakeAmount) + CameraMover.instance.standardPosition + Random.insideUnitSphere * shakeAmount;
-            shakeDuration -= Time.deltaTime * decreaseFactor;
-
-            if (shakeDuration <= 0)
+            if (shakeDuration > 0)
             {
-                Camera.main.transform.position = CameraMover.instance.standardPosition;
+                Vector3 newPos = -(Player.instance.transform.position - Camera.main.ScreenToWorldPoint(Input.mousePosition)) / 3;
+                newPos = Player.instance.transform.position + (newPos / 1.5f);
+
+                Camera.main.transform.localPosition = (Vector3.up * shakeAmount) + CameraMover.instance.standardPosition + Random.insideUnitSphere * shakeAmount;
+                shakeDuration -= Time.deltaTime * decreaseFactor;
+
+                if (shakeDuration <= 0)
+                {
+                    Camera.main.transform.position = CameraMover.instance.standardPosition;
+                }
             }
         }
     }
