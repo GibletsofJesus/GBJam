@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 
 public class EnemyManager : MonoBehaviour {
-
+    
     public List<Enemy> AllEnemies = new List<Enemy>();
-
+    [SerializeField]
     private ObjectPool<Enemy> objectPool = null;
     [SerializeField]
     private Enemy EnemyPrefab = null;
@@ -37,10 +37,10 @@ public class EnemyManager : MonoBehaviour {
             spawnCooldown = (EnemyPrefab.width * (waveSize* waveFrequency)) / ((Player.instance.GetSpeed()) + EnemyPrefab.moveSpeed);
             if (spawnTimer <= 0)
             {
-                float yPos = 1 + (20 * Mathf.FloorToInt(Random.Range(1, 7)));
+                float yPos = 1 + (20 * Mathf.FloorToInt(Random.Range(1, 5)));
                 for (int i = 0; i < waveSize; i++)
                 {
-                    PoolEnemy(transform.position + new Vector3(i * (EnemyPrefab.width + 2), yPos, 0));
+                    PoolEnemy(transform.position + new Vector3(i * (EnemyPrefab.width + 2), yPos, 0),i==0);
                 }
                 spawnTimer = spawnCooldown;
             }
@@ -51,11 +51,12 @@ public class EnemyManager : MonoBehaviour {
         }
     }
 
-    public Enemy PoolEnemy(Vector3 startPos)
+    public Enemy PoolEnemy(Vector3 startPos,bool leader)
     {
         Enemy newEnemy = objectPool.GetPooledObject(transform);
-        newEnemy.OnPooled(startPos);
-        AllEnemies.Add(newEnemy);
+        newEnemy.OnPooled(startPos, leader);
+        if (!AllEnemies.Contains(newEnemy))
+            AllEnemies.Add(newEnemy);
         return newEnemy;
     }
 }

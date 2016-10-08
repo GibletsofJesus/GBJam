@@ -11,16 +11,18 @@ public class Enemy : Actor, IPoolable<Enemy>
     bool moveLeft=true;
     [SerializeField]
     AudioClip[] deathSound;
-    float killPointA,killPointB;
+    float killPointA,killPointB,indicateDistance;
     [SerializeField]
     float decellerationAmount, accellerationAmount;
     Collider2D thisCollider;
+    bool willIndicate;
 
     void Awake()
     {
         thisCollider = GetComponent<Collider2D>();
-        killPointA = Camera.main.ScreenToWorldPoint(new Vector3(-0.5f, 0, 0)).x;
-        killPointB = Camera.main.ViewportToScreenPoint(new Vector3(1.1f, 0, 0)).x;
+        killPointA = Camera.main.ViewportToWorldPoint(new Vector3(-0.5f, 0, 0)).x;
+        killPointB = Camera.main.ViewportToWorldPoint(new Vector3(1.25f, 0, 0)).x;
+        indicateDistance = Camera.main.ViewportToScreenPoint(new Vector3(2, 0, 0)).x;
     }
 
     void Update()
@@ -34,8 +36,18 @@ public class Enemy : Actor, IPoolable<Enemy>
         }
         if (transform.position.x > killPointB && fallTimer > 0)
         {
-            Debug.Log(killPointB + "   " + transform.position.x);
             ReturnPool();
+        }
+        if (willIndicate)
+        {
+            if (transform.position.x < indicateDistance && transform.position.x > killPointB)
+            {
+                EnemyHudIndicators.instance.SetIndicator(transform.position,this);
+            }
+            if (transform.position.x < killPointB)
+            {
+                EnemyHudIndicators.instance.ResetIndicator(this);
+            }
         }
     }
 
@@ -74,7 +86,7 @@ public class Enemy : Actor, IPoolable<Enemy>
         float amp = 5;
 
         float y = Mathf.Sin(Mathf.Deg2Rad * angle) * impactForce * amp;
-        float decay = 0.1f;
+        float decay = 0.25f;
         float gravity = -50;
         float x = Mathf.Cos(Mathf.Deg2Rad * angle) * impactForce * amp;
         if (x < 0)
@@ -107,9 +119,11 @@ public class Enemy : Actor, IPoolable<Enemy>
         Death();
     }
 
-
-    public void OnPooled(Vector3 startPos)
+    public void OnPooled(Vector3 startPos,bool indicated)
     {
+        willIndicate = indicated;
+        moveLeft = true;
+        transform.rotation = Quaternion.Euler(Vector3.zero);
         total++;
         //set everything up
         transform.position = startPos;
@@ -127,8 +141,14 @@ public class Enemy : Actor, IPoolable<Enemy>
 
     public override IEnumerator TakeDamage(float damage)
     {
-        if ((HP-damage) <=0)
-            Player.instance.IncreaseSpeed(accellerationAmount);
+        if ((HP - damage) <= 0)
+        {
+            if ((Player.instance.moveSpeed * 0.3f) < accellerationAmount)
+                Player.instance.IncreaseSpeed(accellerationAmount);
+            else
+            Player.instance.IncreaseSpeed(Player.instance.moveSpeed * 0.3f);
+
+        }
         return base.TakeDamage(damage);
     }
 

@@ -42,7 +42,7 @@ public class Projectile : MonoBehaviour, IPoolable<Projectile>
                 {
                     col.GetComponent<Enemy>().StartCoroutine(col.GetComponent<Enemy>().TakeDamage(ProjectileData.damage));
                 }
-                ReturnPool();
+                //ReturnPool();
             }
         }
     }

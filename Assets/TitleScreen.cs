@@ -9,21 +9,34 @@ public class TitleScreen : MonoBehaviour {
     public Text[] MenuItems;
     [SerializeField]
     Image indicator,sweeper;
+    [SerializeField]
+    GameObject Credits;
     public float scrollSpeed;
     float scrollCD;
-    
+
+    [SerializeField]
+    TextTyper Goofers;
+    PaletteSwapLookup paletteSwapper;
+
     void Start()
     {
+        paletteSwapper = GameObject.Find("PixelCamera2D").GetComponent<PaletteSwapLookup>();
         StartCoroutine(coolText());
     }
 
     [SerializeField]
     Text[] TitleTexts;
+    [SerializeField]
+    GameObject swapBox;
+    [SerializeField]
+    Text PaletteSwapText;
 
     IEnumerator StartGame()
     {
         //speed off
         yield return new  WaitForEndOfFrame();
+
+        Application.LoadLevel(1);
     }
 
     IEnumerator coolText()
@@ -40,10 +53,10 @@ public class TitleScreen : MonoBehaviour {
             new Vector2(1,0),
         };
         
-        Vector2 normalPosition = new Vector2(0, 56);
+        Vector2 normalPosition = new Vector2(0, 60);
 
         int posIndex = 0;
-        while (GameStateManager.instance.currentState == GameStateManager.GameState.Gameplay)
+        while (posIndex < 99)
         {
             for (int i = 0; i < TitleTexts.Length; i++)
             {
@@ -53,6 +66,9 @@ public class TitleScreen : MonoBehaviour {
             if (posIndex > positions.Length - 1)
                 posIndex = 0;
             yield return new WaitForSeconds(0.03333f);
+
+            while (Credits.activeSelf)
+                yield return null;
         }
     }
 
@@ -62,14 +78,59 @@ public class TitleScreen : MonoBehaviour {
         if (scrollCD > 0)
             scrollCD -= Time.deltaTime;
 
-        if (Mathf.Abs(Input.GetAxis("Vertical")) > 0 && scrollCD <= 0)
+        if (!Credits.activeSelf && !Goofers.gameObject.activeSelf)
         {
-            scrollCD = scrollSpeed;
+            if (Mathf.Abs(Input.GetAxis("Vertical")) > 0 && scrollCD <= 0)
+            {
+                scrollCD = scrollSpeed;
 
-            if (Input.GetAxis("Vertical") > 0)
-                ChangeSelection(-1);
+                if (!swapBox.activeSelf)
+                {
+                    if (Input.GetAxis("Vertical") > 0)
+                        ChangeSelection(-1);
+                    else
+                        ChangeSelection(1);
+                }
+                else
+                {
+                    paletteSwapper.enabled = true;
+                    if (Input.GetAxis("Vertical") > 0)
+                        paletteSwapper.SetPaletteIndex(1, PaletteSwapText);
+                    else
+                        paletteSwapper.SetPaletteIndex(-1, PaletteSwapText);
+                }
+            }
+        }
+        if (Input.GetButtonDown("Fire1") && !Goofers.gameObject.activeSelf)
+        {
+            if (!swapBox.activeSelf)
+            {
+                switch (menuIndex)
+                {
+                    case 0:
+                        StartCoroutine(StartGame());
+                        break;
+                    case 1:
+                        //Get goofed on
+                        Goofers.gameObject.SetActive(true);
+                        Goofers.TutorialTime();
+                        break;
+                    case 2:
+                        swapBox.SetActive(true);
+                        break;
+                    case 3:
+                        indicator.gameObject.SetActive(Credits.activeSelf);
+                        Credits.SetActive(!Credits.activeSelf);
+                        break;
+                    case 4:
+                        Application.Quit();
+                        break;
+                }
+            }
             else
-                ChangeSelection(1);
+            {
+                swapBox.SetActive(false);
+            }
         }
     }
 

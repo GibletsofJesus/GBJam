@@ -28,9 +28,6 @@ public class CameraShake : MonoBehaviour
         {
             if (shakeDuration > 0)
             {
-                Vector3 newPos = -(Player.instance.transform.position - Camera.main.ScreenToWorldPoint(Input.mousePosition)) / 3;
-                newPos = Player.instance.transform.position + (newPos / 1.5f);
-
                 Camera.main.transform.localPosition = (Vector3.up * shakeAmount) + CameraMover.instance.standardPosition + Random.insideUnitSphere * shakeAmount;
                 shakeDuration -= Time.deltaTime * decreaseFactor;
 

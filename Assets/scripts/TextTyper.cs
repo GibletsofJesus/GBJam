@@ -16,7 +16,7 @@ public class TextTyper : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        StartCoroutine(DisplayMessages());
+        //StartCoroutine(DisplayMessages());
     }
 
     // Update is called once per frame
@@ -34,13 +34,20 @@ public class TextTyper : MonoBehaviour
         }
     }
 
+
     bool fastText;
+
+    public void TutorialTime()
+    {
+        goofers.Play("intro");
+        StartCoroutine(DisplayMessages());
+    }
 
     IEnumerator DisplayMessages()
     {
         //Make goofington appear
 
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(2.25f);
 
         for (int i = 0; i < messages.Length; i++)
         {
@@ -69,5 +76,9 @@ public class TextTyper : MonoBehaviour
             while (!Input.GetButtonDown("Fire1"))
                 yield return null;
         }
+        TextComp.text = "";
+        goofers.Play("outro");
+        yield return new WaitForSeconds(1.75f);
+        goofers.gameObject.SetActive(false);
     }
 }
