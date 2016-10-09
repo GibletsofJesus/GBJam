@@ -34,7 +34,7 @@ public class Enemy : Actor, IPoolable<Enemy>
             if (transform.position.x < killPointA)
                 ReturnPool();
         }
-        if (transform.position.x > killPointB && fallTimer > 0)
+        if (transform.position.x > killPointB && !moveLeft)
         {
             ReturnPool();
         }
@@ -51,7 +51,7 @@ public class Enemy : Actor, IPoolable<Enemy>
         }
     }
 
-    float fallTimer = 0,TravelSpeed;
+    float fallTimer = 0;
 
     void OnTriggerEnter2D(Collider2D col)
     {
@@ -59,27 +59,31 @@ public class Enemy : Actor, IPoolable<Enemy>
         {
             float angle = Vector3.Angle(col.transform.position * (transform.position.y > col.transform.position.y ? -1 : 1), transform.position);
             //If snooker balls upgrade            
-            StartCoroutine(fallToGround(angle, Player.instance.moveSpeed));
+            StartCoroutine(fallToGround(angle, Player.instance.moveSpeed *
+                ((PlayerPrefs.GetInt("Collision_Force") > 0 ? 1 : 0) + (PlayerPrefs.GetInt("Collision_Force")*0.25f))));
             //mb make the player flash
+            frameHolder.instance.holdFrame(0.1f);
             Player.instance.StartCoroutine(Player.instance.TakeDamage(impactDamage, decellerationAmount));
             //StartCoroutine(TakeDamage(impactDamage));
         }
         if (col.tag == "enemy" && fallTimer > 0)
         {
-            ExplosionManager.instance.PoolExplosion(transform.position, Vector3.one * 0.25f);
-            float angle = Vector3.Angle(col.transform.position * (transform.position.y > col.transform.position.y ? -1 : 1), transform.position);
-
-            Player.instance.IncreaseSpeed(accellerationAmount*.5f);
-            col.GetComponent<Enemy>().StartCoroutine(col.GetComponent<Enemy>().fallToGround(angle,TravelSpeed));
+            if (col.GetComponent<Enemy>().fallTimer == 0)
+            {
+                ExplosionManager.instance.PoolExplosion(transform.position, Vector3.one * 0.25f);
+                
+                frameHolder.instance.holdFrame(0.1f);
+                Player.instance.IncreaseSpeed(accellerationAmount * .5f);
+                col.GetComponent<Enemy>().StartCoroutine(col.GetComponent<Actor>().TakeDamage(50));
+            }
         }
     }
 
-    IEnumerator fallToGround(float angle,float impactForce)
+    IEnumerator fallToGround(float angle, float impactForce)
     {
         moveLeft = false;
         if (angle > 90)
             angle -= 180;
-        frameHolder.instance.holdFrame(0.1f);
         SoundManager.instance.playSound(deathSound[Random.Range(0, deathSound.Length)], 1, Random.Range(0.9f, 1.1f));
         float distance=0;
 
@@ -91,13 +95,13 @@ public class Enemy : Actor, IPoolable<Enemy>
         float x = Mathf.Cos(Mathf.Deg2Rad * angle) * impactForce * amp;
         if (x < 0)
             x *= -1;
-        TravelSpeed = Vector2.SqrMagnitude(new Vector2(x, y));
 
         while (transform.position.y > -54)//Floor height value from player.cs
         {
             while (GameStateManager.instance.currentState == GameStateManager.GameState.Paused)
                 yield return null;
 
+            //Debug.Log("Rotate by " + (impactForce * Time.deltaTime * (y > 0 ? 1 : -1)));
             transform.Rotate(new Vector3(0, 0, impactForce * Time.deltaTime * (y > 0 ? 1 : -1)));
             y -= decay;
             Move(x * Time.deltaTime, ((y - decay) + gravity) * Time.deltaTime);
@@ -121,11 +125,12 @@ public class Enemy : Actor, IPoolable<Enemy>
 
     public void OnPooled(Vector3 startPos,bool indicated)
     {
+        //set everything up
+        StopAllCoroutines();
         willIndicate = indicated;
         moveLeft = true;
         transform.rotation = Quaternion.Euler(Vector3.zero);
         total++;
-        //set everything up
         transform.position = startPos;
 
         base.Start();
@@ -136,18 +141,13 @@ public class Enemy : Actor, IPoolable<Enemy>
             i++;
         }
 
-        gameObject.SetActive(true);
     }
 
-    public override IEnumerator TakeDamage(float damage)
+    public IEnumerator TakeDamage(float damage,float scale)
     {
         if ((HP - damage) <= 0)
         {
-            if ((Player.instance.moveSpeed * 0.3f) < accellerationAmount)
-                Player.instance.IncreaseSpeed(accellerationAmount);
-            else
-            Player.instance.IncreaseSpeed(Player.instance.moveSpeed * 0.3f);
-
+            Player.instance.IncreaseSpeed(scale + accellerationAmount);
         }
         return base.TakeDamage(damage);
     }
@@ -167,6 +167,7 @@ public class Enemy : Actor, IPoolable<Enemy>
 
     public void ReturnPool()
     {
+        EnemyHudIndicators.instance.ResetIndicator(this);
         fallTimer = 0;
         StopAllCoroutines();
         poolData.ReturnPool(this);

@@ -54,7 +54,9 @@ public class EnemyManager : MonoBehaviour {
     public Enemy PoolEnemy(Vector3 startPos,bool leader)
     {
         Enemy newEnemy = objectPool.GetPooledObject(transform);
+        newEnemy.transform.position = Vector3.zero;
         newEnemy.OnPooled(startPos, leader);
+        newEnemy.gameObject.SetActive(true);
         if (!AllEnemies.Contains(newEnemy))
             AllEnemies.Add(newEnemy);
         return newEnemy;

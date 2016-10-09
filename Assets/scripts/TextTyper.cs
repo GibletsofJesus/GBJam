@@ -22,7 +22,7 @@ public class TextTyper : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetButton("Fire1"))
+        if (Input.GetButton("B"))
         {
             goofers.SetFloat("speed", 2);
             fastText = true;
@@ -73,7 +73,7 @@ public class TextTyper : MonoBehaviour
             }
 
             goofers.Play("face_idle");
-            while (!Input.GetButtonDown("Fire1"))
+            while (!Input.GetButtonDown("B"))
                 yield return null;
         }
         TextComp.text = "";

@@ -8,14 +8,16 @@ public class PaletteSwapLookup : MonoBehaviour
 	public Texture[] LookupTexture;
     //public Sprite[] paletteSprites;
     [SerializeField]
-    int paletteIndex;
+    int paletteIndex=6;
 	Material _mat;
-
+    [SerializeField]
+    Shader swappingShader;
 	void OnEnable()
-	{
-		Shader shader = Shader.Find("Hidden/PaletteSwapLookup");
-		if (_mat == null)
-			_mat = new Material(shader);
+    {
+        if (PlayerPrefs.HasKey("Palette"))
+            paletteIndex = PlayerPrefs.GetInt("Palette");
+        if (_mat == null)
+			_mat = new Material(swappingShader);
     }
 
     public void SetPaletteIndex(int upDown,Text textComp)
@@ -31,6 +33,8 @@ public class PaletteSwapLookup : MonoBehaviour
             textComp.text = "0. Original";
         else
             textComp.text = '\n' +""+ paletteIndex + ". " + LookupTexture[paletteIndex].name;
+
+        PlayerPrefs.SetInt("Palette",paletteIndex);
     }
 
 	void OnDisable()

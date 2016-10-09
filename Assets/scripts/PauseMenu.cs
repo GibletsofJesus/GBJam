@@ -37,6 +37,7 @@ public class PauseMenu : MonoBehaviour {
     {
         instance = this;
         gameObject.SetActive(false);
+        paletteSwapper.SetPaletteIndex(0, PaletteSwapText);
     }
 
     [SerializeField]
@@ -78,7 +79,7 @@ public class PauseMenu : MonoBehaviour {
                 }
             }
 
-            if (Input.GetButtonDown("Fire1"))
+            if (Input.GetButtonDown("B"))
             {
                 switch (currentState)
                 {

@@ -17,7 +17,7 @@ public class explosions : MonoBehaviour, IPoolable<explosions>
     // Update is called once per frame
     void Update()
     {
-        transform.position -= Vector3.right * Player.instance.moveSpeed;
+        transform.position -= Vector3.right * Player.instance.moveSpeed * Time.deltaTime*50;
     }
 
     public IEnumerator Explode()

@@ -72,6 +72,8 @@ public class TitleScreen : MonoBehaviour {
         }
     }
 
+    public AudioClip moveSound;
+
     // Update is called once per frame
     void Update()
     {
@@ -82,6 +84,7 @@ public class TitleScreen : MonoBehaviour {
         {
             if (Mathf.Abs(Input.GetAxis("Vertical")) > 0 && scrollCD <= 0)
             {
+                SoundManager.instance.playSound(moveSound, 1, 0.25f+((float)(MenuItems.Length-menuIndex) /(float)MenuItems.Length));
                 scrollCD = scrollSpeed;
 
                 if (!swapBox.activeSelf)
@@ -101,7 +104,7 @@ public class TitleScreen : MonoBehaviour {
                 }
             }
         }
-        if (Input.GetButtonDown("Fire1") && !Goofers.gameObject.activeSelf)
+        if (Input.GetButtonDown("B") && !Goofers.gameObject.activeSelf)
         {
             if (!swapBox.activeSelf)
             {

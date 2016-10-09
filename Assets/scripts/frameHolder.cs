@@ -6,7 +6,7 @@ using System.Collections;
 public class frameHolder : MonoBehaviour {
 
     public static frameHolder instance;
-
+    public float normalSpeed=1;
     public bool enableFrameholding = true;
 
     public void holdFrame(float time)
@@ -50,7 +50,7 @@ public class frameHolder : MonoBehaviour {
             Time.timeScale = 0;
             yield return null;
         }
-        Time.timeScale = 1;
+        Time.timeScale = normalSpeed;
     }
 
     // Use this for initialization
@@ -58,10 +58,9 @@ public class frameHolder : MonoBehaviour {
     {
         instance = this;
 	}
-	
-	// Update is called once per frame
-	void Update ()
+    void Update()
     {
-	
-	}
+        if (holdDuration <= 0 && Time.timeScale != normalSpeed)
+            Time.timeScale = normalSpeed;
+    }
 }
