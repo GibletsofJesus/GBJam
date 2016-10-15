@@ -9,6 +9,7 @@ public class IndicatorPairing
     public Text distanceText = null;
     public Text distanceTextOutline = null;
     public Transform trackMe;
+    public float timer;
     public IndicatorPairing(Enemy e, Image i,Text t,Text t2)
     {
         associatedEnemy = e;
@@ -48,38 +49,47 @@ public class EnemyHudIndicators : MonoBehaviour
             {
                 ip.associatedEnemy = enemyRef;
                 ip.indicator.rectTransform.anchoredPosition = new Vector2(-17,
-            Camera.main.WorldToScreenPoint(Vector3.one * pos.y).y-72);
+            Camera.main.WorldToScreenPoint(Vector3.one * pos.y).y - 72);
                 ip.trackMe = enemyRef.transform;
             }
         }
     }
 
-    public void ResetIndicator(Enemy enemyRef)
+    public void ResetIndicator(IndicatorPairing ip)
     {
-        foreach (IndicatorPairing ip in pairings)
-        {
-            if (ip.associatedEnemy == enemyRef)
-            {
-                ip.associatedEnemy = null;
-                ip.indicator.rectTransform.anchoredPosition = new Vector2(8, 0);
-                break;
-            }
-        }
+        ip.associatedEnemy = null;
+        ip.indicator.rectTransform.anchoredPosition = new Vector2(8, 0);
     }
 
     // Update is called once per frame
     void Update()
-    {
+{
         foreach (IndicatorPairing ip in pairings)
         {
             if (ip.trackMe != null)
             {
-                ip.distanceText.text = "" + (ip.trackMe.position.x - 90);
-                ip.distanceTextOutline.text = "" + (ip.trackMe.position.x - 90);
-                if (ip.trackMe.position.x - 90 < 0)
-                    ResetIndicator(ip.associatedEnemy);
+                if (ip.distanceText.text == "" + (ip.trackMe.position.x - 90))
+                    ip.timer += Time.deltaTime;
 
+                if (ip.timer > 0.1f)
+                    ResetIndicator(ip);
+
+                ip.indicator.rectTransform.anchoredPosition = new Vector2(-17,
+            Camera.main.WorldToScreenPoint(Vector3.one * ip.trackMe.position.y).y
+            - 72);
+
+                if (ip.trackMe.position.x - 90 < 0)
+                {
+                    ResetIndicator(ip);
+                    break;
+                }
+                else
+                {
+                    ip.distanceText.text = "" + (ip.trackMe.position.x - 90);
+                    ip.distanceTextOutline.text = "" + (ip.trackMe.position.x - 90);
+                }
             }
         }
+
     }
 }

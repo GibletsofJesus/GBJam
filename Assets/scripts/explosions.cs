@@ -8,12 +8,9 @@ public class explosions : MonoBehaviour, IPoolable<explosions>
     Color A, B;
     [SerializeField]
     SpriteRenderer sr;
-
-	// Use this for initialization
-	void Start () {
-	
-	}
-
+    [SerializeField]
+    ParticleSystem[] particles; 
+    
     // Update is called once per frame
     void Update()
     {
@@ -22,12 +19,20 @@ public class explosions : MonoBehaviour, IPoolable<explosions>
 
     public IEnumerator Explode()
     {
+        sr.enabled = true;
+        foreach (ParticleSystem ps in particles)
+        {
+            ps.Play();
+        }
+        yield return new WaitForEndOfFrame();
         sr.color = A;
-        yield return new WaitForSeconds(0.05f);
+        yield return new WaitForEndOfFrame();
 
         yield return new WaitForEndOfFrame();
         sr.color = B;
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForEndOfFrame();
+        sr.enabled = false;
+        yield return new WaitForSeconds(1);
         ReturnPool();
     }
 

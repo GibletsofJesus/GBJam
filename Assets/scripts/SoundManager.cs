@@ -6,7 +6,7 @@ public class SoundManager : MonoBehaviour
 {
     public static SoundManager instance;
     public int numberOfSources;
-    public float volumeMultiplayer = 1,musicVolume=1;
+    public float volumeMultiplayer = 1, musicVolume = 1;
     public AudioSource music;
     bool SlowMo;
 
@@ -56,7 +56,7 @@ public class SoundManager : MonoBehaviour
         }
     }
 
-    public void ChangeMoveSound(bool PausePlay,float pitch)
+    public void ChangeMoveSound(bool PausePlay, float pitch)
     {
         if (PausePlay)//True for play/resume, false for pause
             managedAudioSources[0].AudioSrc.UnPause();
@@ -69,18 +69,18 @@ public class SoundManager : MonoBehaviour
     public void changeVolume(float newVol)
     {
         volumeMultiplayer = newVol;
-        
+
         foreach (AudioSource a in audioSrcs)
         {
             a.volume = newVol;
         }
-        for (int i = 0; i < managedAudioSources.Count;i++)
+        for (int i = 0; i < managedAudioSources.Count; i++)
         {
             managedAudioSources[i].AudioSrc.volume = volumeMultiplayer * managedAudioSources[i].volumeLimit;
-        }      
+        }
     }
 
-    public void playSound(AudioClip sound,float volume = 1,float pitch=1)
+    public void playSound(AudioClip sound, float volume = 1, float pitch = 1)
     {
         int c = 0;
         while (c < audioSrcs.Count)
@@ -103,6 +103,7 @@ public class SoundManager : MonoBehaviour
             }
         }
     }
+
     public bool IsSoundPlaying(AudioClip clip)
     {
         foreach (AudioSource a in audioSrcs)
@@ -114,7 +115,7 @@ public class SoundManager : MonoBehaviour
         }
         return false;
     }
-
+    
     public void PauseSound(AudioClip clip,bool pause)
     {
         foreach (AudioSource a in audioSrcs)

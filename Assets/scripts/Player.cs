@@ -1,41 +1,32 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class Player : Actor
 {
     public static Player instance;
 
-    public float fireRate, floorHeight, maxJumpTime;
+    float fireRate=10, floorHeight=-54, maxJumpTime;
     [HideInInspector]
     public float distanceCovered;
     [Header("Idle Acceleration")]
     public AnimationCurve IdleAccelerationCurve;
     public float IdleAccLimit, decellerationPerShot;
 
-    [Header("")]
     [SerializeField]
-    Sprite[] charSprites;
+    Text heightText;
 
     [SerializeField]
     ParticleSystem[] coolFire;
-
-    [Header("Shooting tings")]
-    [SerializeField]
-    Transform[] shootTransforms;
     [SerializeField]
     Projectile.ProjData bulletStats;
     [SerializeField]
-    ParticleSystem[] bulletCasings;
-    [SerializeField]
     GameObject heightMarker;
-    [SerializeField]
-
-    ParticleSystem muzzleFlash, moveSparks;
     [SerializeField]
     AudioClip shootSound, accelerationSound;
     float shootCooldown, abilityCooldown, jumpTimer;
     float speedToAdd = 0.001f;
-    public bool SlowMotion;
+    public int topSpeed;
 
     public override void Start()
     {
@@ -45,7 +36,21 @@ public class Player : Actor
 
     void Update()
     {
-        heightMarker.transform.position = new Vector3(0, -44+(verticalSpeed*maxJumpTime), 0);
+        if (moveSpeed > topSpeed)
+        {
+            topSpeed = (int)moveSpeed;
+
+            if (PlayerPrefs.GetInt("mode") == 3)//We must be in endless mode
+            {
+                //In which case, record highest speed;
+                if (topSpeed > PlayerPrefs.GetInt("3_s"))
+                {
+                    PlayerPrefs.SetInt("3_s", topSpeed);
+                }
+            }
+        }
+
+        heightMarker.transform.position = new Vector3(0, -44 + (verticalSpeed * maxJumpTime), 0);
 
         if (GameStateManager.instance.currentState == GameStateManager.GameState.finishLine)
         {
@@ -55,8 +60,8 @@ public class Player : Actor
         else if (GameStateManager.instance.currentState == GameStateManager.GameState.Gameplay)
         {
             distanceCovered += moveSpeed * Time.deltaTime;
-            HuDManager.instance.speedText.text = "SPEED  " + (moveSpeed * 50).ToString("F2");
-            moveSparks.emissionRate = moveSpeed * 3;
+            HuDManager.instance.speedText.text = (moveSpeed * 15).ToString("F0");
+            HuDManager.instance.UpdateSpeedBar(moveSpeed);
 
             Movement();
             Shooting();
@@ -64,7 +69,7 @@ public class Player : Actor
         }
 
 #if UNITY_ANDROID
-            TouchJumping();
+                TouchJumping();
 #else
         KeyboardInput();
 #endif
@@ -73,6 +78,8 @@ public class Player : Actor
         {
             if (transform.position.y > floorHeight)
             {
+                if (transform.position.y > 4)
+                    heightText.text = "" + (transform.position.y + 54);
                 if (!jumping)
                 {
                     SoundManager.instance.managedAudioSources[1].AudioSrc.volume -= Time.deltaTime;
@@ -86,19 +93,31 @@ public class Player : Actor
                     SoundManager.instance.managedAudioSources[1].AudioSrc.pitch += Time.deltaTime;
                 }
             }
+            else
+                heightText.text = "";
         }
         //Stop jumping
         if (!pressingJump && wasPressingJump && transform.position.y > floorHeight || GameStateManager.instance.currentState == GameStateManager.GameState.finishLine)
             jumping = false;
 
+
         if (transform.position.y == floorHeight && transform.position.x < 100)
         {
-            coolFire[0].emissionRate = (moveSpeed-5) * 30;
-            coolFire[1].emissionRate = (moveSpeed-5) * 30;
+            if (GameStateManager.instance.currentState != GameStateManager.GameState.Paused)
+            {
+                coolFire[0].Play();
+                coolFire[1].Play();
+                coolFire[0].emissionRate = (moveSpeed - 5) * 30;
+                coolFire[1].emissionRate = (moveSpeed - 5) * 30;
 
-
-            coolFire[0].startSpeed = moveSpeed * 50 * (transform.position.x > -60 ? 4 : 1);
-            coolFire[1].startSpeed = moveSpeed * 50 * (transform.position.x > -60 ? 4 : 1);
+                coolFire[0].startSpeed = moveSpeed * 50 * (transform.position.x > -60 ? 4 : 1);
+                coolFire[1].startSpeed = moveSpeed * 50 * (transform.position.x > -60 ? 4 : 1);
+            }
+            else
+            {
+                coolFire[0].Pause();
+                coolFire[1].Pause();
+            }
             SoundManager.instance.managedAudioSources[1].AudioSrc.volume = 0f;
             SoundManager.instance.managedAudioSources[1].AudioSrc.volume = 0;
         }
@@ -107,7 +126,8 @@ public class Player : Actor
             coolFire[0].emissionRate = 0;
             coolFire[1].emissionRate = 0;
         }
-        if(transform.position.x > -60)
+
+        if (transform.position.x > -60)
         {
             foreach (ParticleSystem ps in coolFire)
             {
@@ -163,7 +183,7 @@ public class Player : Actor
 
     public float GetSpeed()
     {
-        return moveSpeed * (SlowMotion ? 0.1f : 1f);
+        return moveSpeed;
     }
 
     void Shooting()
@@ -228,17 +248,16 @@ public class Player : Actor
                         CameraShake.instance.shakeAmount = 0.8f;
                     }
                 }
-                moveSparks.enableEmission = true;
                 moveSpeed += speedToAdd;
                 speedToAdd = 0;
                 SoundManager.instance.managedAudioSources[1].AudioSrc.pitch = 0.5f;
             }
 #endregion
             moveSpeed += IdleAccelerationCurve.Evaluate(moveSpeed / IdleAccLimit)*Time.deltaTime;
-            //moveSpeed += Time.deltaTime * 0.35f;
             jumping = false;
             jumpTimer = 0;
             fallTimer = 0;
+            slowMo = 0;
             maxJumpTime = moveSpeed * 0.1f;
         }
         #endregion
@@ -253,22 +272,21 @@ public class Player : Actor
         if (slowMo < PlayerPrefs.GetInt("Slow_Motion") && pressingJump)
         {
             frameHolder.instance.normalSpeed = 0.25f;
-            slowMo += Time.deltaTime / frameHolder.instance.normalSpeed;
+            slowMo += Time.fixedDeltaTime;
+            Debug.Log("Slow mo: " + slowMo);
         }
         else
         {
             frameHolder.instance.normalSpeed = 1;
-            slowMo = 0;
         }
         #region jumping upwards
         if (jumpTimer < maxJumpTime && jumping)
         {
             if (speedToAdd == 0)
             {
-                moveSparks.enableEmission = false;
                 speedToAdd = 0.01f;
             }
-            Move(0, (SlowMotion ? 0.1f : 1) * verticalSpeed * Time.deltaTime - (gravity * fallTimer * Time.deltaTime));
+            Move(0, verticalSpeed * Time.deltaTime - (gravity * fallTimer * Time.deltaTime));
             jumpTimer += Time.deltaTime;
             if (jumpTimer > maxJumpTime)
                 jumping = false;
@@ -276,7 +294,7 @@ public class Player : Actor
         #endregion
 
     }
-    public float gravity, fallTimer;
+    float gravity=250, fallTimer;
     [SerializeField]
     float slowMo;
 }

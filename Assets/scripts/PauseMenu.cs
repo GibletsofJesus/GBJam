@@ -43,6 +43,7 @@ public class PauseMenu : MonoBehaviour {
     [SerializeField]
     PaletteSwapLookup paletteSwapper;
 
+    public AudioClip moveSound;
     // Update is called once per frame
     void Update()
     {
@@ -51,8 +52,11 @@ public class PauseMenu : MonoBehaviour {
 
         if (GameStateManager.instance.currentState == GameStateManager.GameState.Paused)
         {
+            #region up /down
             if (Mathf.Abs(Input.GetAxis("Vertical")) > 0 && scrollCD <= 0)
             {
+                SoundManager.instance.playSound(moveSound, 1, 0.25f + ((float)(MenuItems.Length - menuIndex) / (float)MenuItems.Length));
+
                 scrollCD = scrollSpeed;
                 if (currentState != menuState.paletteSwap)
                 {
@@ -78,9 +82,12 @@ public class PauseMenu : MonoBehaviour {
                         paletteSwapper.SetPaletteIndex(-1,PaletteSwapText);
                 }
             }
-
-            if (Input.GetButtonDown("B"))
+            #endregion
+            #region pressing a button
+            if (Input.GetButtonDown("A"))
             {
+                SoundManager.instance.playSound(moveSound, 1, 0.25f + ((float)(MenuItems.Length - menuIndex) / (float)MenuItems.Length));
+
                 switch (currentState)
                 {
                     case menuState.main:                        
@@ -104,7 +111,7 @@ public class PauseMenu : MonoBehaviour {
                                 break;
                             case 3:
                                 //Quit
-                                Application.Quit();
+                                Application.LoadLevel(0);
                                 break;
                         }
                         break;
@@ -112,6 +119,13 @@ public class PauseMenu : MonoBehaviour {
                         switch (menuIndex)
                         {
                             case 0:
+                                if (CameraShake.instance.shakeMultiplier < 1)
+                                    CameraShake.instance.shakeMultiplier += 0.1f;
+                                else
+                                    CameraShake.instance.shakeMultiplier = 0;
+
+                                OptionItems[0].text = " Camera shake - " + (int)(CameraShake.instance.shakeMultiplier * 100f) + "%";
+
                                 //Yeah I'll do some shit here at some point
                                 break;
                             case 1:
@@ -119,12 +133,12 @@ public class PauseMenu : MonoBehaviour {
                                 swapBox.SetActive(true);
                                 break;
                             case 2:
-                                if (SoundManager.instance.volumeMultiplayer != 1)
+                                if (SoundManager.instance.volumeMultiplayer < 1)
                                     SoundManager.instance.changeVolume(SoundManager.instance.volumeMultiplayer + 0.1f);
                                 else
                                     SoundManager.instance.changeVolume(0);
 
-                                OptionItems[2].text = "Sound FX - " +SoundManager.instance.volumeMultiplayer*100f;
+                                OptionItems[2].text = " Sound FX - " +(int)(SoundManager.instance.volumeMultiplayer*100f)+"%";
                                 break;
                             case 3:
                                 //Back
@@ -144,11 +158,34 @@ public class PauseMenu : MonoBehaviour {
                         break;
                 }
             }
+            #endregion
+
+            if (Input.GetButtonDown("B"))
+            {
+                if (currentState == menuState.option)
+                {
+                    //Back
+                    currentState = menuState.main;
+                    menuIndex = 0;
+                    ChangeSelection();
+                    foreach (Text t in OptionItems)
+                        t.enabled = false;
+                    foreach (Text t in MenuItems)
+                        t.enabled = true;
+                }
+                else if (currentState == menuState.main)
+                {
+                    GameStateManager.instance.ChangeState(GameStateManager.instance.previousState);
+                    gameObject.SetActive(false);
+                }
+
+            }
         }
     }
 
     public void OpenPauseMenu()
     {
+        //SoundManager.instance.PauseEvyerthing(true);
         gameObject.SetActive(true);
         menuIndex = 0;
         foreach (Text t in OptionItems)

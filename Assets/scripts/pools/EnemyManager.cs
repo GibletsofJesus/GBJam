@@ -25,8 +25,8 @@ public class EnemyManager : MonoBehaviour {
     //  .      |
     //-----------------------------------------------------
 
-    int waveSize=4; //Number of enemies in each clump
-    float waveFrequency=0.25f; //How many 'blocks' should go unfilled after the wave
+    public int waveSize=4; //Number of enemies in each clump
+    public float waveFrequency=0.25f; //How many 'blocks' should go unfilled after the wave
     void Update()
     {
         if (GameStateManager.instance.currentState == GameStateManager.GameState.Gameplay)
@@ -34,7 +34,7 @@ public class EnemyManager : MonoBehaviour {
             //ok so size of enemy
             //divided by thier movespeed
             //Gives the amount of time it takes for it to travel away
-            spawnCooldown = (EnemyPrefab.width * (waveSize* waveFrequency)) / ((Player.instance.GetSpeed()) + EnemyPrefab.moveSpeed);
+            spawnCooldown = (EnemyPrefab.width * (waveSize* waveFrequency)) / ((Player.instance.GetSpeed()) + Mathf.Abs(EnemyPrefab.moveSpeed));
             if (spawnTimer <= 0)
             {
                 float yPos = 1 + (20 * Mathf.FloorToInt(Random.Range(1, 5)));

@@ -11,7 +11,7 @@ public class Enemy : Actor, IPoolable<Enemy>
     bool moveLeft=true;
     [SerializeField]
     AudioClip[] deathSound;
-    float killPointA,killPointB,indicateDistance;
+    float killPointA,killPointB,killPointC,indicateDistance;
     [SerializeField]
     float decellerationAmount, accellerationAmount;
     Collider2D thisCollider;
@@ -22,6 +22,7 @@ public class Enemy : Actor, IPoolable<Enemy>
         thisCollider = GetComponent<Collider2D>();
         killPointA = Camera.main.ViewportToWorldPoint(new Vector3(-0.5f, 0, 0)).x;
         killPointB = Camera.main.ViewportToWorldPoint(new Vector3(1.25f, 0, 0)).x;
+        killPointC = Camera.main.ViewportToWorldPoint(new Vector3(10, 0, 0)).x;
         indicateDistance = Camera.main.ViewportToScreenPoint(new Vector3(2, 0, 0)).x;
     }
 
@@ -32,6 +33,8 @@ public class Enemy : Actor, IPoolable<Enemy>
             Movement();
 
             if (transform.position.x < killPointA)
+                ReturnPool();
+            if (transform.position.x > killPointC)
                 ReturnPool();
         }
         if (transform.position.x > killPointB && !moveLeft)
@@ -46,7 +49,7 @@ public class Enemy : Actor, IPoolable<Enemy>
             }
             if (transform.position.x < killPointB)
             {
-                EnemyHudIndicators.instance.ResetIndicator(this);
+                //EnemyHudIndicators.instance.ResetIndicator(this);
             }
         }
     }
@@ -57,6 +60,13 @@ public class Enemy : Actor, IPoolable<Enemy>
     {
         if (col.tag == "Player" && fallTimer == 0)
         {
+            if (CameraShake.instance)
+            {
+                if (CameraShake.instance.shakeDuration < 0.125f)
+                    CameraShake.instance.shakeDuration = 0.125f;
+                CameraShake.instance.shakeAmount = 0.5f;
+            }
+
             float angle = Vector3.Angle(col.transform.position * (transform.position.y > col.transform.position.y ? -1 : 1), transform.position);
             //If snooker balls upgrade            
             StartCoroutine(fallToGround(angle, Player.instance.moveSpeed *
@@ -68,6 +78,13 @@ public class Enemy : Actor, IPoolable<Enemy>
         }
         if (col.tag == "enemy" && fallTimer > 0)
         {
+            if (CameraShake.instance)
+            {
+                if (CameraShake.instance.shakeDuration < 0.125f)
+                    CameraShake.instance.shakeDuration = 0.125f;
+                CameraShake.instance.shakeAmount = 0.5f;
+            }
+
             if (col.GetComponent<Enemy>().fallTimer == 0)
             {
                 ExplosionManager.instance.PoolExplosion(transform.position, Vector3.one * 0.25f);
@@ -102,7 +119,7 @@ public class Enemy : Actor, IPoolable<Enemy>
                 yield return null;
 
             //Debug.Log("Rotate by " + (impactForce * Time.deltaTime * (y > 0 ? 1 : -1)));
-            transform.Rotate(new Vector3(0, 0, impactForce * Time.deltaTime * (y > 0 ? 1 : -1)));
+            transform.Rotate(new Vector3(0, 0, impactForce * Time.deltaTime*50 * (y > 0 ? 1 : -1)));
             y -= decay;
             Move(x * Time.deltaTime, ((y - decay) + gravity) * Time.deltaTime);
                         
@@ -117,6 +134,13 @@ public class Enemy : Actor, IPoolable<Enemy>
                 trailPlacer.instance.PlaceTrailParticle(transform.position);
                 distance -= 1;
             }
+        }
+
+        if (CameraShake.instance)
+        {
+            if (CameraShake.instance.shakeDuration < 0.125f)
+                CameraShake.instance.shakeDuration = 0.125f;
+            CameraShake.instance.shakeAmount = 0.5f;
         }
 
         frameHolder.instance.holdFrame(0.1f);
@@ -159,7 +183,6 @@ public class Enemy : Actor, IPoolable<Enemy>
             SoundManager.instance.playSound(deathSound[Random.Range(0, deathSound.Length)], 1, Random.Range(0.9f, 1.1f));
         frameHolder.instance.holdFrame(0.1f);
         ReturnPool();
-        base.Death();
         HuDManager.instance.kills++;
         HuDManager.instance.killText.text = HuDManager.instance.kills+"";
         ExplosionManager.instance.PoolExplosion(transform.position, Vector3.one * 0.25f);
@@ -167,7 +190,7 @@ public class Enemy : Actor, IPoolable<Enemy>
 
     public void ReturnPool()
     {
-        EnemyHudIndicators.instance.ResetIndicator(this);
+        //EnemyHudIndicators.instance.ResetIndicator(this);
         fallTimer = 0;
         StopAllCoroutines();
         poolData.ReturnPool(this);

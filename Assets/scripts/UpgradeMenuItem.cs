@@ -42,11 +42,13 @@ public class UpgradeMenuItem : MonoBehaviour {
             {
                 pointImgs[i].enabled = true;
                 shimmerAnimators[i].enabled = true;
+                shimmerAnimators[i].GetComponent<SpriteRenderer>().enabled = true;
             }
             else
             {
                 pointImgs[i].enabled = false;
                 shimmerAnimators[i].enabled = false;
+                shimmerAnimators[i].GetComponent<SpriteRenderer>().enabled = false;
             }
         }
         //PlayerPrefs.SetInt(Title.text.Replace(' ', '_'), points);

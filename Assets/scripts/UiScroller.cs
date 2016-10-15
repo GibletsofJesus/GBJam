@@ -25,8 +25,26 @@ public class UiScroller : MonoBehaviour
     [SerializeField]
     List<Animator> shimmers = new List<Animator>();
 
+    [SerializeField]
+    Renderer sceneTransition;
+
+    IEnumerator SceneTransition(bool b)
+    {
+        float lerpy = 0;
+
+        while (lerpy < 1)
+        {
+            lerpy += Time.deltaTime;
+            sceneTransition.material.SetFloat("_SliceAmount", b ? lerpy: 1-lerpy);
+            yield return new WaitForEndOfFrame();
+        }
+        if (!b)
+            Application.LoadLevel(2);
+    }
+
     void OnEnable()
     {
+        StartCoroutine(SceneTransition(true));
         foreach(SpriteRenderer sr in pointImages)
         {
             shimmers.Add(sr.GetComponentInParent<Animator>());
@@ -116,7 +134,7 @@ public class UiScroller : MonoBehaviour
             UpgradeManager.instance.SaveToFile();
 
             //Mb some sort of transition effect
-            Application.LoadLevel(2);
+            StartCoroutine(SceneTransition(false));
         }
 
         moveCD = moveCD > 0 ? moveCD - Time.deltaTime : 0;

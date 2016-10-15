@@ -19,15 +19,9 @@ public class Actor : MonoBehaviour
         for (int i = 0; i < sr.Length; i++)
         {
             standardCol[i] = sr[i].color;
-            standardCol[i] = Color.white;
         }
     }
-
-    void Update()
-    {
-
-    }
-
+    
     public void Move(float x, float y)
     {
         _movement.x += x;

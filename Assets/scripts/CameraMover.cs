@@ -25,7 +25,7 @@ public class CameraMover : MonoBehaviour {
             transform.position += Vector3.up;
         }
 
-        while (Player.instance.transform.position.y < Camera.main.ViewportToWorldPoint(new Vector3(0, .125f, 0)).y)
+        while (Player.instance.transform.position.y < Camera.main.ViewportToWorldPoint(new Vector3(0, 0.25f, 0)).y)
         {
             //move cam down
             transform.position += Vector3.down;

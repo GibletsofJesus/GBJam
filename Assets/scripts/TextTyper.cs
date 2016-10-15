@@ -22,7 +22,7 @@ public class TextTyper : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetButton("B"))
+        if (Input.GetButton("A"))
         {
             goofers.SetFloat("speed", 2);
             fastText = true;
@@ -37,13 +37,13 @@ public class TextTyper : MonoBehaviour
 
     bool fastText;
 
-    public void TutorialTime()
+    public void TutorialTime(TitleScreen ts)
     {
         goofers.Play("intro");
-        StartCoroutine(DisplayMessages());
+        StartCoroutine(DisplayMessages(ts));
     }
 
-    IEnumerator DisplayMessages()
+    IEnumerator DisplayMessages(TitleScreen ts)
     {
         //Make goofington appear
 
@@ -73,12 +73,13 @@ public class TextTyper : MonoBehaviour
             }
 
             goofers.Play("face_idle");
-            while (!Input.GetButtonDown("B"))
+            while (!Input.GetButtonDown("A"))
                 yield return null;
         }
         TextComp.text = "";
         goofers.Play("outro");
         yield return new WaitForSeconds(1.75f);
         goofers.gameObject.SetActive(false);
+        ts.state = TitleScreen.menuState.main;
     }
 }
